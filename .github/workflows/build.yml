@@ -1,0 +1,40 @@
+name: Build APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'proyecto.zip'
+      - '.github/workflows/build.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descomprimir proyecto.zip
+        run: |
+          if [ -f proyecto.zip ]; then unzip -o proyecto.zip -d .; fi
+          test -f www/index.html || (echo "Falta www/index.html"; exit 1)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm install
+      - run: npx cap add android
+      - name: Iconos de la app
+        run: npx @capacitor/assets generate --android --iconBackgroundColor '#0c1022' --iconBackgroundColorDark '#0c1022' || echo "Sin iconos personalizados"
+      - name: Pantalla horizontal
+        run: sed -i 's/<activity /<activity android:screenOrientation="sensorLandscape" /' android/app/src/main/AndroidManifest.xml
+      - run: npx cap sync android
+      - name: Compilar APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StrikerRivals-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          
