@@ -27,6 +27,11 @@ jobs:
         run: npx @capacitor/assets generate --android --iconBackgroundColor '#0c1022' --iconBackgroundColorDark '#0c1022' || echo "Sin iconos personalizados"
       - name: Pantalla horizontal
         run: sed -i 's/<activity /<activity android:screenOrientation="sensorLandscape" /' android/app/src/main/AndroidManifest.xml
+      - name: Pantalla completa y sin franja blanca
+        run: |
+          STY=android/app/src/main/res/values/styles.xml
+          sed -i 's#<item name="windowNoTitle">true</item>#&<item name="android:windowBackground">\#FF0B3D24</item><item name="android:statusBarColor">\#FF0B3D24</item><item name="android:navigationBarColor">\#FF0B3D24</item><item name="android:windowFullscreen">true</item><item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>#' $STY
+          grep -c windowFullscreen $STY
       - run: npx cap sync android
       - name: Compilar APK
         working-directory: android
@@ -37,4 +42,3 @@ jobs:
         with:
           name: StrikerRivals-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          
